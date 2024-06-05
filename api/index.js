@@ -22,7 +22,7 @@ app.post('/', async (req, res) => {
     let r = await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
         {
             chat_id: process.env.CHAT_ID,
-            text: 'Helo from server',
+            text: 'Helo from server Test',
         })
 
     console.log('inserted to db');
