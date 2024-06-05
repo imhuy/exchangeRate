@@ -103,7 +103,7 @@ const processUpdate = async (update) => {
 app.post(`/api/${token}`, (req, res) => {
     const update = req.body;
     processUpdate(update);
-    res.send('WelcomeWelcome');
+    res.send(`WelcomeWelcome to Telegram Bot! ${update}`);
 });
 
 // Thiết lập webhook
