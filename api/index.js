@@ -112,8 +112,6 @@ const setWebhook = async () => {
     await axios.post(`${telegramApiUrl}/setWebhook`, {
         url: url
     });
-
-    console.log(`Webhook has been set to ${process.env.TELEGRAM_BOT_TOKEN}`);
 };
 
 // Khởi động máy chủ Express
