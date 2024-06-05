@@ -103,7 +103,7 @@ const processUpdate = async (update) => {
 app.post(`/api/${token}`, (req, res) => {
     const update = req.body;
     processUpdate(update);
-    res.sendStatus(200);
+    res.send('WelcomeWelcome');
 });
 
 // Thiết lập webhook
