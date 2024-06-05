@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
@@ -106,14 +107,17 @@ app.post(`/api/${token}`, (req, res) => {
 
 // Thiết lập webhook
 const setWebhook = async () => {
-    const url = `https://exchange-rate-eight.vercel.app/api/${token}`; // Thay thế bằng URL Vercel của bạn
+
+    const url = `https://exchange-rate-eight.vercel.app/api/${token}`; //  URL của ứng dụng Express
     await axios.post(`${telegramApiUrl}/setWebhook`, {
         url: url
     });
+
+    console.log(`Webhook has been set to ${process.env.TELEGRAM_BOT_TOKEN}`);
 };
 
 // Khởi động máy chủ Express
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 app.listen(port, async () => {
     console.log(`Server is running on port ${port}`);
     await setWebhook();
