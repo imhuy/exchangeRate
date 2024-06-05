@@ -10,24 +10,24 @@ const telegramApiUrl = `https://api.telegram.org/bot${token}`;
 // Tạo ứng dụng Express
 const app = express();
 app.use(bodyParser.json());
-
+const keyboard = {
+    inline_keyboard: [
+        [
+            { text: 'Tỷ giá JPY', callback_data: 'tygia_jpy' },
+            { text: 'Giá DCOM', callback_data: 'gia_dcom' },
+            { text: 'Vietcombank', callback_data: 'vietcombank' }
+        ],
+        [
+            { text: 'Giá Coin', callback_data: 'gia_coin' },
+            { text: 'Binance P2P', callback_data: 'binance_p2p' },
+            { text: 'Tygia.Vn', url: 'https://tygia.vn' }
+        ]
+    ]
+};
 // Hàm để gửi tin nhắn với các button
 const sendStartMessage = async (chatId) => {
     const message = 'Please choose:';
-    const keyboard = {
-        inline_keyboard: [
-            [
-                { text: 'Tỷ giá JPY', callback_data: 'tygia_jpy' },
-                { text: 'Giá DCOM', callback_data: 'gia_dcom' },
-                { text: 'Vietcombank', callback_data: 'vietcombank' }
-            ],
-            [
-                { text: 'Giá Coin', callback_data: 'gia_coin' },
-                { text: 'Binance P2P', callback_data: 'binance_p2p' },
-                { text: 'Tygia.Vn', url: 'https://tygia.vn' }
-            ]
-        ]
-    };
+
 
     await axios.post(`${telegramApiUrl}/sendMessage`, {
         chat_id: chatId,
@@ -42,7 +42,8 @@ const sendTygiaJpyMessage = async (chatId) => {
     const message = `Tỷ giá hiện tại của JPY: ${rate} VND`;
     await axios.post(`${telegramApiUrl}/sendMessage`, {
         chat_id: chatId,
-        text: message
+        text: message,
+        reply_markup: JSON.stringify(keyboard)
     });
 };
 
@@ -107,11 +108,9 @@ app.post(`/api/${token}`, (req, res) => {
 
 // Thiết lập webhook
 const setWebhook = async () => {
-
     const url = `https://exchange-rate-eight.vercel.app/api/${token}`; //  URL của ứng dụng Express
-    await axios.post(`${telegramApiUrl}/setWebhook`, {
-        url: url
-    });
+    let setWebhooks = await axios.get(`${telegramApiUrl}/setWebhook?url=${url}`,);
+
 };
 
 // Khởi động máy chủ Express
