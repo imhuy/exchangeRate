@@ -5,7 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const axios = require('axios');
-const url = 'https://api.telegram.org/bot';
+const telegramApiUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
 const cors = require('cors');
 app.use(bodyParser.json());
 app.use(cors());
@@ -20,12 +20,19 @@ app.get('/', function (req, res) {
 
 app.post('/', async (req, res) => {
 
+
+
     let message = req?.body?.message?.text;
+    let chat_id = req?.body?.message?.chat?.id
     if (!message) {
-        res.send('Nạp tiền không thành công');
+        res.send('Lấy message không thành công');
         return;
     }
 
+    if (!chat_id) {
+        res.send('Lấy group_id không thành công');
+        return;
+    }
 
     const keyboard = {
         inline_keyboard: [
@@ -42,10 +49,9 @@ app.post('/', async (req, res) => {
         ]
     };
 
-    console.log(req?.body);
-    await axios.post(`${url}${process.env.BOT_TOKEN}/sendMessage`,
+    await axios.post(`${telegramApiUrl}/sendMessage`,
         {
-            chat_id: process.env.CHAT_ID,
+            chat_id: chat_id,
             text: 'Helo from server Test',
             reply_markup: JSON.stringify(keyboard)
         })
@@ -61,3 +67,5 @@ app.post('/', async (req, res) => {
 app.listen(8000, () => console.log('Server ready on port 8000.'));
 
 module.exports = app;
+
+// https://api.telegram.org/bot7474830816:AAFm_wrTSYJBEdzckyfs2fPNHrbFoBulKF0/setWebHook?url=https://051d-118-70-118-5.ngrok-free.app
