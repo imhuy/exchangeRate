@@ -1,39 +1,18 @@
-require('dotenv').config();
-
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
-const path = require('path');
 const axios = require('axios');
-const telegramApiUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
-const cors = require('cors');
+
+// Thay thế 'YOUR_TELEGRAM_BOT_TOKEN' bằng token của bot của bạn
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const telegramApiUrl = `https://api.telegram.org/bot${token}`;
+
+// Tạo ứng dụng Express
+const app = express();
 app.use(bodyParser.json());
-app.use(cors());
-app.use(express.static('public'));
 
-app.get('/', function (req, res) {
-    res.json({
-        BOT_TOKEN: process.env.BOT_TOKEN,
-        CHAT_ID: process.env.CHAT_ID,
-    });
-});
-
-app.post('/', async (req, res) => {
-
-
-
-    let message = req?.body?.message?.text;
-    let chat_id = req?.body?.message?.chat?.id
-    if (!message) {
-        res.send('Lấy message không thành công');
-        return;
-    }
-
-    if (!chat_id) {
-        res.send('Lấy group_id không thành công');
-        return;
-    }
-
+// Hàm để gửi tin nhắn với các button
+const sendStartMessage = async (chatId) => {
+    const message = 'Please choose:';
     const keyboard = {
         inline_keyboard: [
             [
@@ -49,23 +28,95 @@ app.post('/', async (req, res) => {
         ]
     };
 
-    await axios.post(`${telegramApiUrl}/sendMessage`,
-        {
-            chat_id: chat_id,
-            text: 'Helo from server Test',
-            reply_markup: JSON.stringify(keyboard)
-        })
-        .then((response) => {
-            console.log('Message posted');
-        })
-    res.status(200).send(req.body);
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message,
+        reply_markup: JSON.stringify(keyboard)
+    });
+};
+
+// Hàm để gửi tin nhắn tỷ giá JPY
+const sendTygiaJpyMessage = async (chatId) => {
+    const rate = 110; // Ví dụ tỷ giá
+    const message = `Tỷ giá hiện tại của JPY: ${rate} VND`;
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message
+    });
+};
+
+// Hàm để gửi giá DCOM
+const sendGiaDcomMessage = async (chatId) => {
+    const price = 200000; // Ví dụ giá
+    const message = `Giá hiện tại của DCOM: ${price} VND`;
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message
+    });
+};
+
+// Hàm để gửi giá Vietcombank
+const sendVietcombankMessage = async (chatId) => {
+    const info = "Thông tin Vietcombank..."; // Ví dụ thông tin
+    const message = `Thông tin Vietcombank: ${info}`;
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message
+    });
+};
+
+// Hàm để gửi giá Coin
+const sendGiaCoinMessage = async (chatId) => {
+    const price = 50000; // Ví dụ giá
+    const message = `Giá hiện tại của Coin: ${price} VND`;
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message
+    });
+};
+
+// Hàm để xử lý các cập nhật từ Telegram
+const processUpdate = async (update) => {
+    if (update.message && update.message.text === '/start') {
+        await sendStartMessage(update.message.chat.id);
+    } else if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+
+        if (data === 'tygia_jpy') {
+            await sendTygiaJpyMessage(chatId);
+        } else if (data === 'gia_dcom') {
+            await sendGiaDcomMessage(chatId);
+        } else if (data === 'vietcombank') {
+            await sendVietcombankMessage(chatId);
+        } else if (data === 'gia_coin') {
+            await sendGiaCoinMessage(chatId);
+        } else if (data === 'binance_p2p') {
+            // Xử lý callback cho Binance P2P nếu cần
+        }
+    }
+};
+
+// Endpoint để Telegram gửi các cập nhật
+app.post(`/api/${token}`, (req, res) => {
+    const update = req.body;
+    processUpdate(update);
+    res.sendStatus(200);
 });
 
+// Thiết lập webhook
+const setWebhook = async () => {
+    const url = `https://exchange-rate-eight.vercel.app/api/${token}`; // Thay thế bằng URL Vercel của bạn
+    await axios.post(`${telegramApiUrl}/setWebhook`, {
+        url: url
+    });
+};
 
-
-
-app.listen(8000, () => console.log('Server ready on port 8000.'));
+// Khởi động máy chủ Express
+const port = process.env.PORT || 3000;
+app.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    await setWebhook();
+});
 
 module.exports = app;
-
-// https://api.telegram.org/bot7474830816:AAFm_wrTSYJBEdzckyfs2fPNHrbFoBulKF0/setWebHook?url=https://051d-118-70-118-5.ngrok-free.app
