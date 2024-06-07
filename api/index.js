@@ -7,6 +7,7 @@ const axios = require('axios');
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const telegramApiUrl = `https://api.telegram.org/bot${token}`;
 
+const URL_TEST = 'https://23b8-42-118-79-54.ngrok-free.app'
 // Tạo ứng dụng Express
 const app = express();
 app.use(bodyParser.json());
@@ -20,10 +21,11 @@ const keyboard = {
         [
             { text: 'Giá Coin', callback_data: 'gia_coin' },
             { text: 'Binance P2P', callback_data: 'binance_p2p' },
-            { text: 'Tygia.Vn', url: 'https://tygia.vn' }
+            // { text: 'Tygia.Vn', url: 'https://tygia.vn' }
         ]
     ]
 };
+
 // Hàm để gửi tin nhắn với các button
 const sendStartMessage = async (chatId) => {
     const message = 'Please choose:';
@@ -35,6 +37,22 @@ const sendStartMessage = async (chatId) => {
         reply_markup: JSON.stringify(keyboard)
     });
 };
+
+
+// Hàm cham cong
+const sendMessageChamCong = async (data) => {
+
+    console.log(data)
+    const message = `${data.from.first_name} ${data.from.last_name || ''} đã chấm công`;
+    const chatId = data.chat.id
+
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message,
+        reply_markup: JSON.stringify(keyboard)
+    });
+};
+
 
 // Hàm để gửi tin nhắn tỷ giá JPY
 const sendTygiaJpyMessage = async (chatId) => {
@@ -79,9 +97,17 @@ const sendGiaCoinMessage = async (chatId) => {
 
 // Hàm để xử lý các cập nhật từ Telegram
 const processUpdate = async (update) => {
+
+    let textUpdate = update?.message?.text || ''
+    
+    console.log(update.message)
     if (update.message && update.message.text === '/start') {
         await sendStartMessage(update.message.chat.id);
-    } else if (update.callback_query) {
+    }
+    if (update.message && textUpdate.includes('/chamcong')) {
+        await sendMessageChamCong(update.message)
+    }
+    else if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
         const data = update.callback_query.data;
 
@@ -108,7 +134,8 @@ app.post(`/api/${token}`, (req, res) => {
 
 // Thiết lập webhook
 const setWebhook = async () => {
-    const url = `https://exchange-rate-eight.vercel.app/api/${token}`; //  URL của ứng dụng Express
+    const url = `${URL_TEST}/api/${token}`
+    // const url = `https://exchange-rate-eight.vercel.app/api/${token}`; //  URL của ứng dụng Express
     let setWebhooks = await axios.get(`${telegramApiUrl}/setWebhook?url=${url}`,);
 
 };
