@@ -7,7 +7,9 @@ const axios = require('axios');
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const telegramApiUrl = `https://api.telegram.org/bot${token}`;
 
-const URL_TEST = 'https://23b8-42-118-79-54.ngrok-free.app'
+const URL_TEST = 'https://c4b6-2405-4802-4909-a3a0-71c7-5a8a-c425-b044.ngrok-free.app'
+
+
 // Tạo ứng dụng Express
 const app = express();
 app.use(bodyParser.json());
@@ -26,112 +28,6 @@ const keyboard = {
     ]
 };
 
-// Hàm để gửi tin nhắn với các button
-const sendStartMessage = async (chatId) => {
-    const message = 'Please choose:';
-
-
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message,
-        reply_markup: JSON.stringify(keyboard)
-    });
-};
-
-
-// Hàm cham cong
-const sendMessageChamCong = async (data) => {
-
-    console.log(data)
-    const message = `${data.from.first_name} ${data.from.last_name || ''} đã chấm công`;
-    const chatId = data.chat.id
-
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message,
-        reply_markup: JSON.stringify(keyboard)
-    });
-};
-
-
-// Hàm để gửi tin nhắn tỷ giá JPY
-const sendTygiaJpyMessage = async (chatId) => {
-    const rate = 110; // Ví dụ tỷ giá
-    const message = `Tỷ giá hiện tại của JPY: ${rate} VND`;
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message,
-        reply_markup: JSON.stringify(keyboard)
-    });
-};
-
-// Hàm để gửi giá DCOM
-const sendGiaDcomMessage = async (chatId) => {
-    const price = 200000; // Ví dụ giá
-    const message = `Giá hiện tại của DCOM: ${price} VND`;
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message
-    });
-};
-
-// Hàm để gửi giá Vietcombank
-const sendVietcombankMessage = async (chatId) => {
-    const info = "Thông tin Vietcombank..."; // Ví dụ thông tin
-    const message = `Thông tin Vietcombank: ${info}`;
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message
-    });
-};
-
-// Hàm để gửi giá Coin
-const sendGiaCoinMessage = async (chatId) => {
-    const price = 50000; // Ví dụ giá
-    const message = `Giá hiện tại của Coin: ${price} VND`;
-    await axios.post(`${telegramApiUrl}/sendMessage`, {
-        chat_id: chatId,
-        text: message
-    });
-};
-
-// Hàm để xử lý các cập nhật từ Telegram
-const processUpdate = async (update) => {
-
-    let textUpdate = update?.message?.text || ''
-    
-    console.log(update.message)
-    if (update.message && update.message.text === '/start') {
-        await sendStartMessage(update.message.chat.id);
-    }
-    if (update.message && textUpdate.includes('/chamcong')) {
-        await sendMessageChamCong(update.message)
-    }
-    else if (update.callback_query) {
-        const chatId = update.callback_query.message.chat.id;
-        const data = update.callback_query.data;
-
-        if (data === 'tygia_jpy') {
-            await sendTygiaJpyMessage(chatId);
-        } else if (data === 'gia_dcom') {
-            await sendGiaDcomMessage(chatId);
-        } else if (data === 'vietcombank') {
-            await sendVietcombankMessage(chatId);
-        } else if (data === 'gia_coin') {
-            await sendGiaCoinMessage(chatId);
-        } else if (data === 'binance_p2p') {
-            // Xử lý callback cho Binance P2P nếu cần
-        }
-    }
-};
-
-// Endpoint để Telegram gửi các cập nhật
-app.post(`/api/${token}`, (req, res) => {
-    const update = req.body;
-    processUpdate(update);
-    res.send(`WelcomeWelcome to Telegram Bot! ${JSON.stringify(update)}`);
-});
-
 // Thiết lập webhook
 const setWebhook = async () => {
     const url = `${URL_TEST}/api/${token}`
@@ -146,5 +42,146 @@ app.listen(port, async () => {
     console.log(`Server is running on port ${port}`);
     await setWebhook();
 });
+
+// Hàm để gửi tin nhắn 
+const sendStartMessage = async (chatId) => {
+    const message = 'Hello girl';
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text: message,
+    });
+};
+
+// Hàm để xử lý các cập nhật từ Telegram
+const processUpdate = async (update) => {
+
+    let textUpdate = update?.message?.text || ''
+    let chatId = update?.message?.chat?.id
+
+    console.log('processUpdate',update)
+
+    if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+        await sendMessageGetPrice(chatId, data)
+        return;
+    }
+
+    if (update.message && update.message.text === '/start') {
+        await sendStartMessage(update.message.chat.id);
+        return;
+    }
+
+    if (update.message && textUpdate.includes('/check')) {
+        await sendMessageCheckToken(chatId, textUpdate)
+        return;
+    }
+
+    if (update.message && textUpdate.includes('/price')) {
+        await sendMessageGetPrice(chatId, textUpdate)
+        return;
+    }
+    
+};
+
+// Endpoint để Telegram gửi các cập nhật
+app.post(`/api/${token}`, (req, res) => {
+    const update = req.body;
+    processUpdate(update);
+    res.send(`WelcomeWelcome to Telegram Bot! ${JSON.stringify(update)}`);
+});
+
+// hàm send message 
+const sendMessage = async (chatId, message, returnKeyboard = null) => {
+
+    console.log('returnKeyboard',returnKeyboard)
+    const keyboard = returnKeyboard ?  {
+        inline_keyboard: returnKeyboard.map(element => {
+            return [{
+                text: `${element.symbol} - ${element.name}`, callback_data:`/price ${element.id}`,
+            }]
+        })
+    }: null ;
+    console.log('sendMessage',keyboard)
+    await axios.post(`${telegramApiUrl}/sendMessage`, {
+        chat_id: chatId,
+        text:  message,
+        reply_markup: keyboard ? JSON.stringify(keyboard) : ''
+    });
+}
+
+// -----
+
+// Hàm check giá token
+
+const sendMessageGetPrice = async (chatId, messageUpdate) => {
+    let message = 'hi'
+    let tokenId = messageUpdate?.split(' ')[1]
+    // # URL của CoinGecko API
+    let url = 'https://api.coingecko.com/api/v3/simple/price'
+
+    // # Tham số truy vấn
+    let params = {
+        'ids': tokenId,  
+        'vs_currencies': 'usd'  
+    }
+
+    axios.get(url, { params })
+        .then(response => {
+            if (response.status === 200) {
+                const data = response.data;
+                const price = data[tokenId].usd;
+                message = `Giá hiện tại của ${tokenId}: $${price}`
+                sendMessage(chatId, message)
+            } else {
+                message = `Yêu cầu thất bại với mã lỗi: ${response.status}`
+                sendMessage(chatId, message)
+            }
+        })
+            .catch(error => {
+                message = `Lỗi khi gửi yêu cầu: ${error.message}`;
+                sendMessage(chatId, message)
+        });
+}
+
+const sendMessageCheckToken = async (chatId, data) => {
+    console.log("sendMessageCheckToken",data)
+
+    let tokenCheck = data?.split(' ')[1]
+
+    await getFullTokenName(tokenCheck,chatId)
+
+};
+
+const getFullTokenName = async (tokenCode, chatId) => {
+    
+    console.log('getFullTokenName',chatId)
+    // URL của CoinGecko API để lấy danh sách coin
+    const url = 'https://api.coingecko.com/api/v3/coins/list';
+
+    // Gửi yêu cầu GET để lấy danh sách coin
+    axios.get(url)
+        .then(  response => {
+            if (response.status === 200) {
+                const coins = response.data;
+                const tokenName = coins.filter(coin => coin.symbol === tokenCode);
+                if (!tokenName) {
+                    console.log(`Không tìm thấy coin với mã ${tokenCode}.`);
+                    return;
+                }
+                if (tokenName.length === 1) {
+                    sendMessageGetPrice(chatId,`/price ${tokenName[0].id}`)
+                } else if (tokenName.length >= 1) {
+                     sendMessage(chatId,'Chose your token',tokenName)
+                }
+            } else {
+                console.log(`Yêu cầu thất bại với mã lỗi: ${response.status}`);
+            }
+        })
+        .catch(error => {
+            console.error(`Lỗi khi gửi yêu cầu: ${error.message}`);
+        });
+}
+
 
 module.exports = app;
